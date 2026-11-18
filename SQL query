@@ -1,4 +1,3 @@
-
 CREATE DATABASE SAU_Club_Management;
 USE SAU_Club_Management;
 
@@ -8,10 +7,7 @@ CREATE TABLE Students (
     student_name VARCHAR(100) NOT NULL,
     department VARCHAR(100),
     program VARCHAR(100),
-    year_of_study INT,
     account_status VARCHAR(20) NOT NULL,
-
-    CHECK (year_of_study IS NULL OR year_of_study > 0)
 );
 
 -- 2. FACULTY ADVISORS
