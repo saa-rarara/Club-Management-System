@@ -1,0 +1,183 @@
+
+CREATE DATABASE SAU_Club_Management;
+USE SAU_Club_Management;
+
+-- 1. STUDENTS
+CREATE TABLE Students (
+    student_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_name VARCHAR(100) NOT NULL,
+    department VARCHAR(100),
+    program VARCHAR(100),
+    year_of_study INT,
+    account_status VARCHAR(20) NOT NULL,
+
+    CHECK (year_of_study IS NULL OR year_of_study > 0)
+);
+
+-- 2. FACULTY ADVISORS
+CREATE TABLE Faculty_Advisors (
+    faculty_id INT AUTO_INCREMENT PRIMARY KEY,
+    faculty_name VARCHAR(100) NOT NULL,
+    department VARCHAR(100),
+    account_status VARCHAR(20) NOT NULL
+);
+
+-- 3. ADMIN REPRESENTATIVES
+CREATE TABLE Admin_Representatives (
+    admin_id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_name VARCHAR(100) NOT NULL,
+    designation VARCHAR(100),
+    account_status VARCHAR(20) NOT NULL
+);
+
+-- 4. USER ACCOUNTS
+CREATE TABLE User_Accounts (
+    account_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT UNIQUE,
+    faculty_id INT UNIQUE,
+    admin_id INT UNIQUE,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+
+    FOREIGN KEY (student_id)
+        REFERENCES Students(student_id),
+
+    FOREIGN KEY (faculty_id)
+        REFERENCES Faculty_Advisors(faculty_id),
+
+    FOREIGN KEY (admin_id)
+        REFERENCES Admin_Representatives(admin_id),
+
+    CHECK (
+        (student_id IS NOT NULL) +
+        (faculty_id IS NOT NULL) +
+        (admin_id IS NOT NULL) = 1
+    )
+);
+
+-- 5. CLUBS
+CREATE TABLE Clubs (
+    club_id INT AUTO_INCREMENT PRIMARY KEY,
+    club_name VARCHAR(100) NOT NULL,
+    club_status VARCHAR(20) NOT NULL
+);
+
+-- 6. MEMBERSHIPS
+CREATE TABLE Memberships (
+    student_id INT NOT NULL,
+    club_id INT NOT NULL,
+    join_date DATE NOT NULL,
+    membership_status VARCHAR(20) NOT NULL,
+
+    PRIMARY KEY (student_id, club_id),
+
+    FOREIGN KEY (student_id)
+        REFERENCES Students(student_id),
+
+    FOREIGN KEY (club_id)
+        REFERENCES Clubs(club_id)
+);
+
+-- 7. CLUB PRESIDENT
+CREATE TABLE Club_President (
+    president_assignment_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    club_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    assignment_status VARCHAR(20) NOT NULL,
+
+    FOREIGN KEY (student_id, club_id)
+        REFERENCES Memberships(student_id, club_id),
+
+    CHECK (end_date IS NULL OR end_date >= start_date)
+);
+
+-- 8. CLUB ADVISOR
+CREATE TABLE Club_Advisor (
+    advisor_assignment_id INT AUTO_INCREMENT PRIMARY KEY,
+    faculty_id INT NOT NULL,
+    club_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    assignment_status VARCHAR(20) NOT NULL,
+
+    FOREIGN KEY (faculty_id)
+        REFERENCES Faculty_Advisors(faculty_id),
+
+    FOREIGN KEY (club_id)
+        REFERENCES Clubs(club_id),
+
+    CHECK (end_date IS NULL OR end_date >= start_date)
+);
+
+-- 9. APPLICATIONS
+CREATE TABLE Applications (
+    application_id INT AUTO_INCREMENT PRIMARY KEY,
+    club_id INT NOT NULL,
+    student_id INT NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    description TEXT,
+    submission_date DATETIME NOT NULL,
+    application_status VARCHAR(30) NOT NULL,
+
+    proposed_start DATETIME NOT NULL,
+    proposed_end DATETIME NOT NULL,
+    requested_venue VARCHAR(150) NOT NULL,
+    event_purpose TEXT,
+
+    funding_required BOOLEAN NOT NULL DEFAULT FALSE,
+    requested_amount DECIMAL(12,2) NULL,
+    funding_purpose TEXT NULL,
+
+    FOREIGN KEY (club_id)
+        REFERENCES Clubs(club_id),
+
+    FOREIGN KEY (student_id)
+        REFERENCES Students(student_id),
+
+    CHECK (proposed_end > proposed_start),
+
+    CHECK (
+        (funding_required = FALSE
+         AND requested_amount IS NULL
+         AND funding_purpose IS NULL)
+        OR
+        (funding_required = TRUE
+         AND requested_amount > 0
+         AND funding_purpose IS NOT NULL)
+    )
+);
+
+-- 10. APPROVAL DECISIONS
+CREATE TABLE Approval_Decisions (
+    decision_id INT AUTO_INCREMENT PRIMARY KEY,
+    application_id INT NOT NULL,
+    faculty_id INT NULL,
+    admin_id INT NULL,
+    decision VARCHAR(20) NOT NULL,
+    comments TEXT,
+    decision_date DATETIME NOT NULL,
+
+    FOREIGN KEY (application_id)
+        REFERENCES Applications(application_id),
+
+    FOREIGN KEY (faculty_id)
+        REFERENCES Faculty_Advisors(faculty_id),
+
+    FOREIGN KEY (admin_id)
+        REFERENCES Admin_Representatives(admin_id),
+
+    CHECK (
+        (faculty_id IS NOT NULL AND admin_id IS NULL)
+        OR
+        (faculty_id IS NULL AND admin_id IS NOT NULL)
+    ),
+
+    CHECK (
+        decision IN ('Approved', 'Rejected', 'Pending')
+    ),
+
+    UNIQUE (application_id, faculty_id),
+    UNIQUE (application_id, admin_id)
+);
