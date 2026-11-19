@@ -12,7 +12,6 @@ JOIN Club_Advisor ca ON f.faculty_id = ca.faculty_id
 JOIN Clubs c ON ca.club_id = c.club_id
 WHERE c.club_name = 'Tinker Town';
 
-
 SELECT s.student_name, c.club_name
 FROM Club_President cp
 JOIN Students s ON cp.student_id = s.student_id
