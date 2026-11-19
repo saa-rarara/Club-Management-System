@@ -1,0 +1,56 @@
+{#
+    Shared partial: event details + reviewer decisions for one application.
+    Used by student_applications.html, faculty_applications.html and
+    admin_applications.html with:
+        {% include "_application_details.html" %}
+    Expects the variables "application" and "decisions" to exist.
+#}
+
+<dl class="detail-list">
+
+    <dt>Description</dt>
+    <dd>{{ application.description or '—' }}</dd>
+
+    <dt>Event Purpose</dt>
+    <dd>{{ application.event_purpose or '—' }}</dd>
+
+    <dt>Event Time</dt>
+    <dd>
+        {{ application.proposed_start|datetime_display }}
+        &rarr; {{ application.proposed_end|datetime_display }}
+    </dd>
+
+    <dt>Venue</dt>
+    <dd>{{ application.requested_venue }}</dd>
+
+    <dt>Funding</dt>
+    <dd>
+        {% if application.funding_required %}
+            {{ application.requested_amount|money }} — {{ application.funding_purpose }}
+        {% else %}
+            Not required
+        {% endif %}
+    </dd>
+
+</dl>
+
+<h4 class="decisions-heading">Reviewer Decisions</h4>
+
+{% set app_decisions = decisions.get(application.application_id, []) %}
+
+{% if app_decisions %}
+    <ul class="decision-list">
+        {% for d in app_decisions %}
+            <li>
+                <span class="status-badge {{ d.decision|lower }}">{{ d.decision }}</span>
+                <strong>{{ d.reviewer_name }}</strong>
+                <small class="muted">({{ d.reviewer_role }}, {{ d.decision_date|datetime_display }})</small>
+                {% if d.comments %}
+                    <p class="decision-comment">“{{ d.comments }}”</p>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="muted">No decisions recorded yet.</p>
+{% endif %}

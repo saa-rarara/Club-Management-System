@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Dashboard{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>Welcome, {{ faculty.faculty_name }}!</h1>
+        <p class="page-subtitle">Faculty Dashboard &middot; {{ faculty.department or '—' }}</p>
+    </div>
+    <a href="{{ url_for('faculty_applications', status='Pending') }}" class="btn">Review Applications</a>
+</header>
+
+<section class="stat-grid">
+
+    <div class="summary-card">
+        <h3>{{ clubs|length }}</h3>
+        <p>Clubs Advised</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ pending_count }}</h3>
+        <p>Pending Applications</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ awaiting_review|length }}</h3>
+        <p>Awaiting My Decision</p>
+    </div>
+
+</section>
+
+
+<div class="two-column">
+
+    <section class="card">
+
+        <div class="card-header">
+            <h2>My Assigned Clubs</h2>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="data-table compact">
+                <thead>
+                    <tr>
+                        <th>Club</th>
+                        <th>Members</th>
+                        <th>President</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for club in clubs %}
+                        <tr>
+                            <td class="strong">{{ club.club_name }}</td>
+                            <td>{{ club.member_count }}</td>
+                            <td>{{ club.president_name or '—' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3" class="empty-message">No clubs currently assigned.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </section>
+
+
+    <section class="card">
+
+        <div class="card-header">
+            <h2>Awaiting My Decision</h2>
+            <a href="{{ url_for('faculty_applications') }}" class="text-link">All applications</a>
+        </div>
+
+        {% if awaiting_review %}
+            <ul class="simple-list">
+                {% for app_row in awaiting_review %}
+                    <li>
+                        <span>
+                            {{ app_row.title }}
+                            <small class="muted">— {{ app_row.club_name }}, by {{ app_row.student_name }}</small>
+                        </span>
+                        <a class="text-link"
+                           href="{{ url_for('faculty_applications', status='Pending') }}#application-{{ app_row.application_id }}">Review</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-message">Nothing is waiting for your review.</p>
+        {% endif %}
+
+    </section>
+
+</div>
+
+{% endblock %}

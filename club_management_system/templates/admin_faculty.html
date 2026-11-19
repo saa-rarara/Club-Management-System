@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Faculty{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>Manage Faculty</h1>
+        <p class="page-subtitle">
+            Manage faculty advisor records and create their login accounts.
+        </p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
+</header>
+
+
+<section class="stat-grid">
+
+    <div class="summary-card">
+        <h3>{{ summary.total_faculty }}</h3>
+        <p>Total Faculty</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ summary.accounts_not_created or 0 }}</h3>
+        <p>Accounts Not Created</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ summary.accounts_created or 0 }}</h3>
+        <p>Accounts Created</p>
+    </div>
+
+</section>
+
+
+<section class="card">
+
+    <h2>Faculty Records</h2>
+
+    <p class="section-description">
+        Select a faculty member without a login account to create their credentials.
+    </p>
+
+    <form action="{{ url_for('manage_faculty') }}" method="GET"
+          class="student-filter-form">
+
+        <div class="filter-field">
+            <label for="search">Search Faculty</label>
+            <input type="text" id="search" name="search"
+                   value="{{ search_query }}"
+                   placeholder="Enter faculty name or ID">
+        </div>
+
+        <div class="filter-field">
+            <label for="login_status">Login Account</label>
+            <select id="login_status" name="login_status">
+                <option value="all" {% if login_filter == 'all' %}selected{% endif %}>All Accounts</option>
+                <option value="created" {% if login_filter == 'created' %}selected{% endif %}>Created</option>
+                <option value="not_created" {% if login_filter == 'not_created' %}selected{% endif %}>Not Created</option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="faculty_status">Faculty Status</label>
+            <select id="faculty_status" name="faculty_status">
+                <option value="all" {% if faculty_filter == 'all' %}selected{% endif %}>All Faculty</option>
+                <option value="Active" {% if faculty_filter == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Inactive" {% if faculty_filter == 'Inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn">Apply Filters</button>
+            <a href="{{ url_for('manage_faculty') }}">Clear Filters</a>
+        </div>
+
+    </form>
+
+    <p class="muted">Showing {{ faculty|length }} faculty record{{ '' if faculty|length == 1 else 's' }}.</p>
+
+    <div class="table-wrapper">
+
+        <table class="students-table data-table">
+
+            <thead>
+                <tr>
+                    <th>Faculty ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Clubs Advised</th>
+                    <th>Account Status</th>
+                    <th>Username</th>
+                    <th>Login Account</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for member in faculty %}
+
+                    <tr>
+
+                        <td>{{ member.faculty_id }}</td>
+
+                        <td class="student-name">{{ member.faculty_name }}</td>
+
+                        <td>{{ member.department or '-' }}</td>
+
+                        <td>{{ member.clubs_advised }}</td>
+
+                        <td>
+
+                            <span class="status-badge {{ 'active' if member.account_status == 'Active' else 'inactive' }}">
+                                {{ member.account_status }}
+                            </span>
+
+                            <form action="{{ url_for('update_faculty_status', faculty_id=member.faculty_id) }}"
+                                  method="POST"
+                                  class="student-status-form"
+                                  data-name="{{ member.faculty_name }}"
+                                  onsubmit="return this.account_status.value === 'Active' || confirm('Deactivate ' + this.dataset.name + '? They will be signed out and unable to log in.');">
+
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <select name="account_status" required>
+                                    <option value="Active" {% if member.account_status == 'Active' %}selected{% endif %}>Active</option>
+                                    <option value="Inactive" {% if member.account_status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                                </select>
+
+                                <button type="submit">Update</button>
+
+                            </form>
+
+                        </td>
+
+                        <td>{{ member.username or '—' }}</td>
+
+                        <td>
+
+                            {% if member.username %}
+
+                                <span class="account-created">Created</span>
+
+                                <details class="reset-password-details">
+
+                                    <summary>Reset Password</summary>
+
+                                    <form action="{{ url_for('reset_faculty_password', faculty_id=member.faculty_id) }}"
+                                          method="POST"
+                                          class="reset-password-form">
+
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                        <label for="new-password-{{ member.faculty_id }}">New Password</label>
+                                        <input type="password"
+                                               id="new-password-{{ member.faculty_id }}"
+                                               name="password"
+                                               minlength="12"
+                                               placeholder="Minimum 12 characters"
+                                               autocomplete="new-password"
+                                               required>
+
+                                        <label for="confirm-password-{{ member.faculty_id }}">Confirm New Password</label>
+                                        <input type="password"
+                                               id="confirm-password-{{ member.faculty_id }}"
+                                               name="confirm_password"
+                                               minlength="12"
+                                               placeholder="Re-enter password"
+                                               autocomplete="new-password"
+                                               required>
+
+                                        <button type="submit">Update Password</button>
+
+                                    </form>
+
+                                </details>
+
+                            {% elif member.account_status == 'Active' %}
+
+                                <a href="#create-{{ member.faculty_id }}" class="create-account-link">
+                                    Create Account
+                                </a>
+
+                            {% else %}
+
+                                <span class="account-unavailable">Unavailable</span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% if not member.username and member.account_status == 'Active' %}
+
+                        <tr id="create-{{ member.faculty_id }}" class="account-form-row">
+
+                            <td colspan="7">
+
+                                <div class="account-form-container">
+
+                                    <h3>Create Login Account: {{ member.faculty_name }}</h3>
+
+                                    <form action="{{ url_for('create_faculty_account', faculty_id=member.faculty_id) }}"
+                                          method="POST"
+                                          class="student-account-form">
+
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                        <div class="form-field">
+                                            <label for="username-{{ member.faculty_id }}">Username</label>
+                                            <input type="text"
+                                                   id="username-{{ member.faculty_id }}"
+                                                   name="username"
+                                                   placeholder="Enter username"
+                                                   maxlength="100"
+                                                   autocomplete="off"
+                                                   required>
+                                        </div>
+
+                                        <div class="form-field">
+                                            <label for="password-{{ member.faculty_id }}">Password</label>
+                                            <input type="password"
+                                                   id="password-{{ member.faculty_id }}"
+                                                   name="password"
+                                                   placeholder="Minimum 12 characters"
+                                                   minlength="12"
+                                                   autocomplete="new-password"
+                                                   required>
+                                        </div>
+
+                                        <div class="form-field">
+                                            <label for="confirm-{{ member.faculty_id }}">Confirm Password</label>
+                                            <input type="password"
+                                                   id="confirm-{{ member.faculty_id }}"
+                                                   name="confirm_password"
+                                                   placeholder="Re-enter password"
+                                                   minlength="12"
+                                                   autocomplete="new-password"
+                                                   required>
+                                        </div>
+
+                                        <button type="submit" class="create-account-button">
+                                            Create Faculty Account
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="7" class="empty-message">No faculty records found.</td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Presidents &amp; Advisors{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>Presidents &amp; Advisors</h1>
+        <p class="page-subtitle">
+            Assigning a new president or advisor automatically ends the previous
+            assignment (its end date is set to today and status to Inactive),
+            so the history is kept.
+        </p>
+    </div>
+    <a href="{{ url_for('manage_clubs') }}" class="btn btn-outline">Manage Clubs</a>
+</header>
+
+<section class="card">
+
+    <div class="table-wrapper">
+
+        <table class="data-table assignments-table">
+
+            <thead>
+                <tr>
+                    <th>Club</th>
+                    <th>Current President</th>
+                    <th>Assign President</th>
+                    <th>Current Advisor</th>
+                    <th>Assign Advisor</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for club in clubs %}
+
+                    {% set members = members_by_club.get(club.club_id, []) %}
+
+                    <tr>
+
+                        <td>
+                            <span class="strong">{{ club.club_name }}</span>
+                            {% if club.club_status != 'Active' %}
+                                <br><span class="status-badge inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ club.president_name or '—' }}</td>
+
+                        <td>
+                            {% if club.club_status != 'Active' %}
+                                <span class="muted">Club inactive</span>
+                            {% elif members %}
+                                <!-- POST to /admin/presidents/assign -->
+                                <form action="{{ url_for('assign_president') }}" method="POST" class="assign-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="club_id" value="{{ club.club_id }}">
+                                    <select name="student_id" required aria-label="Select president for {{ club.club_name }}">
+                                        <option value="">Select member</option>
+                                        {% for m in members %}
+                                            <option value="{{ m.student_id }}"
+                                                {% if m.student_id == club.president_id %}selected{% endif %}>
+                                                {{ m.student_name }} (ID {{ m.student_id }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-small">Assign</button>
+                                </form>
+                            {% else %}
+                                <span class="muted">No active members</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ club.advisor_name or '—' }}</td>
+
+                        <td>
+                            {% if club.club_status != 'Active' %}
+                                <span class="muted">Club inactive</span>
+                            {% else %}
+                                <!-- POST to /admin/advisors/assign -->
+                                <form action="{{ url_for('assign_advisor') }}" method="POST" class="assign-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="club_id" value="{{ club.club_id }}">
+                                    <select name="faculty_id" required aria-label="Select advisor for {{ club.club_name }}">
+                                        <option value="">Select faculty</option>
+                                        {% for f in faculty %}
+                                            <option value="{{ f.faculty_id }}"
+                                                {% if f.faculty_id == club.advisor_id %}selected{% endif %}>
+                                                {{ f.faculty_name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-small">Assign</button>
+                                </form>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="5" class="empty-message">No clubs found.</td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}New Application{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>Submit Event Application</h1>
+        <p class="page-subtitle">
+            Propose an event for one of your clubs. It is reviewed by the
+            club's faculty advisor and an administrator.
+        </p>
+    </div>
+    <a href="{{ url_for('view_applications') }}" class="btn btn-outline">My Applications</a>
+</header>
+
+{% if clubs %}
+
+<section class="card">
+
+    <!--
+        Field names here must match request.form.get(...) in
+        submit_application() in app.py. The browser checks "required"
+        fields, but app.py validates everything again on the server,
+        because browser checks can be bypassed.
+    -->
+    <form action="{{ url_for('submit_application') }}" method="POST"
+          class="form-grid">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        {% set selected_club = request.args.get('club_id', '') %}
+
+        <div class="form-field">
+            <label for="club_id">Club *</label>
+            <select id="club_id" name="club_id" required>
+                <option value="">Select a club</option>
+                {% for club in clubs %}
+                    <option value="{{ club.club_id }}"
+                        {% if selected_club == club.club_id|string %}selected{% endif %}>
+                        {{ club.club_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-field">
+            <label for="title">Event Title *</label>
+            <input type="text" id="title" name="title" maxlength="150" required>
+        </div>
+
+        <div class="form-field full-width">
+            <label for="description">Description *</label>
+            <textarea id="description" name="description" rows="4" required></textarea>
+        </div>
+
+        <div class="form-field">
+            <label for="proposed_start">Event Start *</label>
+            <input type="datetime-local" id="proposed_start" name="proposed_start" required>
+        </div>
+
+        <div class="form-field">
+            <label for="proposed_end">Event End *</label>
+            <input type="datetime-local" id="proposed_end" name="proposed_end" required>
+        </div>
+
+        <div class="form-field">
+            <label for="requested_venue">Requested Venue *</label>
+            <input type="text" id="requested_venue" name="requested_venue" maxlength="150" required>
+        </div>
+
+        <div class="form-field">
+            <label for="event_purpose">Event Purpose *</label>
+            <input type="text" id="event_purpose" name="event_purpose" required>
+        </div>
+
+        <fieldset class="form-field full-width funding-box">
+
+            <legend>Funding</legend>
+
+            <label class="checkbox-label">
+                <input type="checkbox" id="funding_required" name="funding_required" value="yes">
+                This event requires funding
+            </label>
+
+            <div class="form-grid" id="funding-fields">
+
+                <div class="form-field">
+                    <label for="requested_amount">Requested Amount (₹)</label>
+                    <input type="number" id="requested_amount" name="requested_amount"
+                           min="0.01" step="0.01">
+                </div>
+
+                <div class="form-field">
+                    <label for="funding_purpose">Funding Purpose</label>
+                    <input type="text" id="funding_purpose" name="funding_purpose">
+                </div>
+
+            </div>
+
+        </fieldset>
+
+        <div class="form-actions full-width">
+            <button type="submit" class="btn">Submit Application</button>
+        </div>
+
+    </form>
+
+</section>
+
+<!-- Show the funding fields only when the checkbox is ticked. -->
+<script>
+    (function () {
+        var checkbox = document.getElementById("funding_required");
+        var fields = document.getElementById("funding-fields");
+        function update() { fields.style.display = checkbox.checked ? "" : "none"; }
+        checkbox.addEventListener("change", update);
+        update();
+    })();
+</script>
+
+{% else %}
+
+<section class="card">
+    <p class="empty-message">
+        You must be an active member of a club before you can submit an application.
+        <a href="{{ url_for('view_clubs') }}" class="text-link">Browse clubs</a>
+    </p>
+</section>
+
+{% endif %}
+
+{% endblock %}

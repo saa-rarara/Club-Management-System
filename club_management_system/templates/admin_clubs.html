@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Clubs{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>Manage Clubs</h1>
+        <p class="page-subtitle">Create, edit, activate, deactivate or delete clubs.</p>
+    </div>
+    <a href="{{ url_for('manage_assignments') }}" class="btn btn-outline">Presidents &amp; Advisors</a>
+</header>
+
+
+<!-- CREATE: POST to /admin/clubs -->
+<section class="card">
+
+    <h2>Create a New Club</h2>
+
+    <form action="{{ url_for('manage_clubs') }}" method="POST" class="inline-form">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-field grow">
+            <label for="new-club-name">Club Name</label>
+            <input type="text" id="new-club-name" name="club_name"
+                   maxlength="100" placeholder="e.g. Robotics Club" required>
+        </div>
+
+        <button type="submit" class="btn">Create Club</button>
+
+    </form>
+
+</section>
+
+
+<!-- READ / UPDATE / DELETE -->
+<section class="card">
+
+    <h2>All Clubs ({{ clubs|length }})</h2>
+
+    <p class="section-description">
+        Clubs that already have members, applications or advisors cannot be
+        deleted because other records depend on them. Mark them
+        <strong>Inactive</strong> instead.
+    </p>
+
+    <div class="table-wrapper">
+
+        <table class="data-table">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Club</th>
+                    <th>Status</th>
+                    <th>Members</th>
+                    <th>President</th>
+                    <th>Faculty Advisor</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for club in clubs %}
+
+                    <tr>
+
+                        <td>{{ club.club_id }}</td>
+
+                        <td class="strong">{{ club.club_name }}</td>
+
+                        <td>
+                            <span class="status-badge {{ club.club_status|lower }}">{{ club.club_status }}</span>
+                        </td>
+
+                        <td>{{ club.member_count }}</td>
+
+                        <td>{{ club.president_name or '—' }}</td>
+
+                        <td>{{ club.advisor_name or '—' }}</td>
+
+                        <td>
+                            <details class="reset-password-details">
+                                <summary>Edit</summary>
+
+                                <form action="{{ url_for('edit_club', club_id=club.club_id) }}"
+                                      method="POST" class="reset-password-form">
+
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                    <label for="club-name-{{ club.club_id }}">Club Name</label>
+                                    <input type="text" id="club-name-{{ club.club_id }}" name="club_name"
+                                           value="{{ club.club_name }}" maxlength="100" required>
+
+                                    <label for="club-status-{{ club.club_id }}">Status</label>
+                                    <select id="club-status-{{ club.club_id }}" name="club_status">
+                                        <option value="Active" {% if club.club_status == 'Active' %}selected{% endif %}>Active</option>
+                                        <option value="Inactive" {% if club.club_status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                                    </select>
+
+                                    <button type="submit">Save Changes</button>
+
+                                </form>
+                            </details>
+                        </td>
+
+                        <td>
+                            <form action="{{ url_for('delete_club', club_id=club.club_id) }}"
+                                  method="POST"
+                                  data-name="{{ club.club_name }}"
+                                  onsubmit="return confirm('Permanently delete ' + this.dataset.name + '? This cannot be undone.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                            </form>
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="8" class="empty-message">No clubs yet.</td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{% endblock %}

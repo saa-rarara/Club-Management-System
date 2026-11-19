@@ -1,0 +1,11 @@
+{#
+    Shared partial: Pending / Approved / Rejected filter tabs.
+    Expects: status_filter and filter_endpoint.
+#}
+
+<nav class="filter-tabs" aria-label="Filter by status">
+    {% for value, label in [('all', 'All'), ('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')] %}
+        <a href="{{ url_for(filter_endpoint, status=value) }}"
+           class="{% if status_filter == value %}active{% endif %}">{{ label }}</a>
+    {% endfor %}
+</nav>

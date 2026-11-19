@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In{% endblock %}
+{% block body_class %}login-page{% endblock %}
+{% block main_class %}login-main{% endblock %}
+
+{% block content %}
+
+<div class="login-container">
+
+    <p class="login-brand">SAU <span>Clubs</span></p>
+
+    <h1>Login</h1>
+
+    <!--
+        The form POSTs to /login. Flask reads request.form["username"]
+        and request.form["password"], then checks User_Accounts.
+    -->
+    <form action="{{ url_for('login') }}" method="POST">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="username">Enter Username</label>
+        <input type="text" id="username" name="username"
+               placeholder="Username" autocomplete="username"
+               maxlength="100" required autofocus>
+
+        <label for="password">Enter Password</label>
+        <input type="password" id="password" name="password"
+               placeholder="Password" autocomplete="current-password"
+               required>
+
+        <button type="submit">Sign In</button>
+
+    </form>
+
+    <!-- No public sign-up: accounts are issued by an administrator. -->
+    <p class="signup-text">
+        Don't have an account?
+        Please contact the club administration office.
+    </p>
+
+</div>
+
+{% endblock %}

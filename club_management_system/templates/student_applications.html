@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}My Applications{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>My Applications</h1>
+        <p class="page-subtitle">
+            Track the status of your event applications. An application is
+            <strong>Approved</strong> after two approvals (faculty advisor and
+            administrator) and <strong>Rejected</strong> if any reviewer rejects it.
+        </p>
+    </div>
+    <a href="{{ url_for('submit_application') }}" class="btn">New Application</a>
+</header>
+
+<section class="application-list">
+
+    {% for application in applications %}
+
+        <article class="card application-card">
+
+            <div class="card-header">
+                <div>
+                    <h2>{{ application.title }}</h2>
+                    <p class="muted">
+                        {{ application.club_name }}
+                        &middot; Submitted {{ application.submission_date|datetime_display }}
+                    </p>
+                </div>
+                <span class="status-badge {{ application.application_status|lower }}">
+                    {{ application.application_status }}
+                </span>
+            </div>
+
+            <details>
+                <summary>View details and reviewer comments</summary>
+                {% include "_application_details.html" %}
+            </details>
+
+        </article>
+
+    {% else %}
+
+        <section class="card">
+            <p class="empty-message">
+                You have not submitted any applications yet.
+            </p>
+        </section>
+
+    {% endfor %}
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Students{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<header class="page-header">
+    <div>
+        <h1>Manage Students</h1>
+        <p class="page-subtitle">
+            Manage student records and create login accounts.
+        </p>
+    </div>
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
+</header>
+
+
+<!-- Student Summary (overall counts, not affected by filters) -->
+<section class="stat-grid">
+
+    <div class="summary-card">
+        <h3>{{ summary.total_students }}</h3>
+        <p>Total Students</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ summary.accounts_not_created or 0 }}</h3>
+        <p>Accounts Not Created</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ summary.accounts_created or 0 }}</h3>
+        <p>Accounts Created</p>
+    </div>
+
+</section>
+
+
+<!-- Student Table -->
+<section class="card">
+
+    <h2>Student Records</h2>
+
+    <p class="section-description">
+        Select a student without a login account to create their credentials.
+    </p>
+
+    <!-- GET form: values appear in the URL, e.g. /admin/students?search=aanvi -->
+    <form action="{{ url_for('manage_students') }}" method="GET"
+          class="student-filter-form">
+
+        <div class="filter-field">
+            <label for="search">Search Student</label>
+            <input type="text" id="search" name="search"
+                   value="{{ search_query }}"
+                   placeholder="Enter student name or ID">
+        </div>
+
+        <div class="filter-field">
+            <label for="login_status">Login Account</label>
+            <select id="login_status" name="login_status">
+                <option value="all" {% if login_filter == 'all' %}selected{% endif %}>All Accounts</option>
+                <option value="created" {% if login_filter == 'created' %}selected{% endif %}>Created</option>
+                <option value="not_created" {% if login_filter == 'not_created' %}selected{% endif %}>Not Created</option>
+            </select>
+        </div>
+
+        <div class="filter-field">
+            <label for="student_status">Student Status</label>
+            <select id="student_status" name="student_status">
+                <option value="all" {% if student_filter == 'all' %}selected{% endif %}>All Students</option>
+                <option value="Active" {% if student_filter == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Inactive" {% if student_filter == 'Inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn">Apply Filters</button>
+            <a href="{{ url_for('manage_students') }}">Clear Filters</a>
+        </div>
+
+    </form>
+
+    <p class="muted">Showing {{ students|length }} student{{ '' if students|length == 1 else 's' }}.</p>
+
+    <div class="table-wrapper">
+
+        <table class="students-table data-table">
+
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Student Name</th>
+                    <th>Department</th>
+                    <th>Program</th>
+                    <th>Account Status</th>
+                    <th>Username</th>
+                    <th>Login Account</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for student in students %}
+
+                    <tr>
+
+                        <td>{{ student.student_id }}</td>
+
+                        <td class="student-name">{{ student.student_name }}</td>
+
+                        <td>{{ student.department or '-' }}</td>
+
+                        <td>{{ student.program or '-' }}</td>
+
+                        <td>
+
+                            <span class="status-badge {{ 'active' if student.account_status == 'Active' else 'inactive' }}">
+                                {{ student.account_status }}
+                            </span>
+
+                            <form action="{{ url_for('update_student_status', student_id=student.student_id) }}"
+                                  method="POST"
+                                  class="student-status-form"
+                                  data-name="{{ student.student_name }}"
+                                  onsubmit="return this.account_status.value === 'Active' || confirm('Deactivate ' + this.dataset.name + '? They will be signed out and unable to log in.');">
+
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <select name="account_status" required>
+                                    <option value="Active" {% if student.account_status == 'Active' %}selected{% endif %}>Active</option>
+                                    <option value="Inactive" {% if student.account_status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                                </select>
+
+                                <button type="submit">Update</button>
+
+                            </form>
+
+                        </td>
+
+                        <td>{{ student.username or '—' }}</td>
+
+                        <td>
+
+                            {% if student.username %}
+
+                                <span class="account-created">Created</span>
+
+                                <details class="reset-password-details">
+
+                                    <summary>Reset Password</summary>
+
+                                    <form action="{{ url_for('reset_student_password', student_id=student.student_id) }}"
+                                          method="POST"
+                                          class="reset-password-form">
+
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                        <label for="new-password-{{ student.student_id }}">New Password</label>
+                                        <input type="password"
+                                               id="new-password-{{ student.student_id }}"
+                                               name="password"
+                                               minlength="12"
+                                               placeholder="Minimum 12 characters"
+                                               autocomplete="new-password"
+                                               required>
+
+                                        <label for="confirm-password-{{ student.student_id }}">Confirm New Password</label>
+                                        <input type="password"
+                                               id="confirm-password-{{ student.student_id }}"
+                                               name="confirm_password"
+                                               minlength="12"
+                                               placeholder="Re-enter password"
+                                               autocomplete="new-password"
+                                               required>
+
+                                        <button type="submit">Update Password</button>
+
+                                    </form>
+
+                                </details>
+
+                            {% elif student.account_status == 'Active' %}
+
+                                <a href="#create-{{ student.student_id }}" class="create-account-link">
+                                    Create Account
+                                </a>
+
+                            {% else %}
+
+                                <span class="account-unavailable">Unavailable</span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% if not student.username and student.account_status == 'Active' %}
+
+                        <tr id="create-{{ student.student_id }}" class="account-form-row">
+
+                            <td colspan="7">
+
+                                <div class="account-form-container">
+
+                                    <h3>Create Login Account: {{ student.student_name }}</h3>
+
+                                    <form action="{{ url_for('create_student_account', student_id=student.student_id) }}"
+                                          method="POST"
+                                          class="student-account-form">
+
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                        <div class="form-field">
+                                            <label for="username-{{ student.student_id }}">Username</label>
+                                            <input type="text"
+                                                   id="username-{{ student.student_id }}"
+                                                   name="username"
+                                                   placeholder="Enter username"
+                                                   maxlength="100"
+                                                   autocomplete="off"
+                                                   required>
+                                        </div>
+
+                                        <div class="form-field">
+                                            <label for="password-{{ student.student_id }}">Password</label>
+                                            <input type="password"
+                                                   id="password-{{ student.student_id }}"
+                                                   name="password"
+                                                   placeholder="Minimum 12 characters"
+                                                   minlength="12"
+                                                   autocomplete="new-password"
+                                                   required>
+                                        </div>
+
+                                        <div class="form-field">
+                                            <label for="confirm-{{ student.student_id }}">Confirm Password</label>
+                                            <input type="password"
+                                                   id="confirm-{{ student.student_id }}"
+                                                   name="confirm_password"
+                                                   placeholder="Re-enter password"
+                                                   minlength="12"
+                                                   autocomplete="new-password"
+                                                   required>
+                                        </div>
+
+                                        <button type="submit" class="create-account-button">
+                                            Create Student Account
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="7" class="empty-message">No student records found.</td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{% endblock %}

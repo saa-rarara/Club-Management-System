@@ -1,0 +1,36 @@
+{#
+    Shared partial: Approve / Reject form for one application.
+    Expects:
+        application  - the application row
+        action_url   - where to POST (faculty_decision or admin_decision)
+        my_decision  - this reviewer's existing decision row, or none
+#}
+
+<form action="{{ action_url }}" method="POST" class="decision-form">
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    {% if my_decision %}
+        <p class="muted">
+            Your current decision:
+            <span class="status-badge {{ my_decision.decision|lower }}">{{ my_decision.decision }}</span>
+            — submitting again will replace it.
+        </p>
+    {% endif %}
+
+    <label for="comments-{{ application.application_id }}">Comments (optional)</label>
+    <textarea id="comments-{{ application.application_id }}" name="comments" rows="2"
+              placeholder="Reason for your decision">{{ my_decision.comments if my_decision and my_decision.comments else '' }}</textarea>
+
+    <div class="button-row">
+        <!-- Each button sends decision=Approved or decision=Rejected. -->
+        <button type="submit" name="decision" value="Approved" class="btn btn-success btn-small">
+            Approve
+        </button>
+        <button type="submit" name="decision" value="Rejected" class="btn btn-danger btn-small"
+                onclick="return confirm('Reject this application? Any rejection makes the application Rejected.');">
+            Reject
+        </button>
+    </div>
+
+</form>

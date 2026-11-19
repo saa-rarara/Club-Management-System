@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>Admin Dashboard</h1>
+        <p class="page-subtitle">System overview and administration.</p>
+    </div>
+</header>
+
+
+<h2 class="section-title">System Overview</h2>
+
+<section class="stat-grid stat-grid-6">
+
+    <div class="summary-card">
+        <h3>{{ students }}</h3>
+        <p>Total Students</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ faculty }}</h3>
+        <p>Total Faculty</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ clubs }}</h3>
+        <p>Total Clubs</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ memberships }}</h3>
+        <p>Active Memberships</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ accounts }}</h3>
+        <p>Login Accounts</p>
+    </div>
+
+    <div class="summary-card highlight">
+        <h3>{{ pending }}</h3>
+        <p>Pending Applications</p>
+    </div>
+
+</section>
+
+
+<h2 class="section-title">Management</h2>
+
+<section class="action-grid">
+
+    <a href="{{ url_for('manage_students') }}" class="action-card">
+        <h3>Manage Students</h3>
+        <p>Create student logins, reset passwords and change account status.</p>
+    </a>
+
+    <a href="{{ url_for('manage_faculty') }}" class="action-card">
+        <h3>Manage Faculty</h3>
+        <p>Create faculty logins, reset passwords and change account status.</p>
+    </a>
+
+    <a href="{{ url_for('manage_clubs') }}" class="action-card">
+        <h3>Manage Clubs</h3>
+        <p>Create, rename, activate, deactivate and delete clubs.</p>
+    </a>
+
+    <a href="{{ url_for('manage_assignments') }}" class="action-card">
+        <h3>Presidents &amp; Advisors</h3>
+        <p>Assign club presidents and faculty advisors.</p>
+    </a>
+
+    <a href="{{ url_for('admin_applications') }}" class="action-card">
+        <h3>View Applications</h3>
+        <p>Review event and funding applications from all clubs.</p>
+    </a>
+
+</section>
+
+
+<section class="card">
+
+    <div class="card-header">
+        <h2>Oldest Pending Applications</h2>
+        <a href="{{ url_for('admin_applications', status='Pending') }}" class="text-link">Review all pending</a>
+    </div>
+
+    {% if pending_applications %}
+        <ul class="simple-list">
+            {% for app_row in pending_applications %}
+                <li>
+                    <span>
+                        {{ app_row.title }}
+                        <small class="muted">— {{ app_row.club_name }}, by {{ app_row.student_name }},
+                            {{ app_row.submission_date|datetime_display(false) }}</small>
+                    </span>
+                    <a class="text-link"
+                       href="{{ url_for('admin_applications', status='Pending') }}#application-{{ app_row.application_id }}">Review</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-message">No pending applications.</p>
+    {% endif %}
+
+</section>
+
+{% endblock %}

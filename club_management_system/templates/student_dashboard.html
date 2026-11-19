@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>Welcome, {{ student.student_name }}!</h1>
+        <p class="page-subtitle">
+            Department: {{ student.department or '—' }}
+            &middot; Program: {{ student.program or '—' }}
+        </p>
+    </div>
+    <a href="{{ url_for('submit_application') }}" class="btn">New Application</a>
+</header>
+
+
+<!-- Summary cards -->
+<section class="stat-grid">
+
+    <div class="summary-card">
+        <h3>{{ membership_count }}</h3>
+        <p>Active Memberships</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ pending_count }}</h3>
+        <p>Pending Applications</p>
+    </div>
+
+    <div class="summary-card">
+        <h3>{{ president_of|length }}</h3>
+        <p>Clubs I Lead</p>
+    </div>
+
+</section>
+
+
+<div class="two-column">
+
+    <!-- My clubs -->
+    <section class="card">
+
+        <div class="card-header">
+            <h2>My Clubs</h2>
+            <a href="{{ url_for('view_clubs') }}" class="text-link">Browse clubs</a>
+        </div>
+
+        {% if president_of %}
+            <p class="notice">
+                You are the president of:
+                {% for club in president_of %}<strong>{{ club.club_name }}</strong>{% if not loop.last %}, {% endif %}{% endfor %}
+            </p>
+        {% endif %}
+
+        {% if my_clubs %}
+            <ul class="simple-list">
+                {% for club in my_clubs %}
+                    <li>
+                        <span>{{ club.club_name }}</span>
+                        <small class="muted">Joined {{ club.join_date|datetime_display(false) }}</small>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-message">You have not joined any clubs yet.</p>
+        {% endif %}
+
+    </section>
+
+
+    <!-- Recent applications -->
+    <section class="card">
+
+        <div class="card-header">
+            <h2>Recent Applications</h2>
+            <a href="{{ url_for('view_applications') }}" class="text-link">View all</a>
+        </div>
+
+        {% if recent_applications %}
+            <ul class="simple-list">
+                {% for app_row in recent_applications %}
+                    <li>
+                        <span>
+                            {{ app_row.title }}
+                            <small class="muted">— {{ app_row.club_name }}</small>
+                        </span>
+                        <span class="status-badge {{ app_row.application_status|lower }}">
+                            {{ app_row.application_status }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-message">No applications submitted yet.</p>
+        {% endif %}
+
+    </section>
+
+</div>
+
+{% endblock %}

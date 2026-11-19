@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Clubs{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>Available Clubs</h1>
+        <p class="page-subtitle">Browse active clubs and join the ones you are interested in.</p>
+    </div>
+</header>
+
+<section class="club-grid">
+
+    {% for club in clubs %}
+
+        <article class="club-card">
+
+            <h2>{{ club.club_name }}</h2>
+
+            <p class="muted">{{ club.member_count }} active member{{ '' if club.member_count == 1 else 's' }}</p>
+
+            {% if club.membership_status == 'Active' %}
+
+                <span class="status-badge active">You are a member</span>
+
+            {% elif club.membership_status %}
+
+                <span class="status-badge inactive">Membership {{ club.membership_status }}</span>
+
+            {% else %}
+
+                <!-- POST to /student/clubs/<club_id>/join -->
+                <form action="{{ url_for('join_club', club_id=club.club_id) }}"
+                      method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-small">Join Club</button>
+                </form>
+
+            {% endif %}
+
+        </article>
+
+    {% else %}
+
+        <p class="empty-message">There are no active clubs at the moment.</p>
+
+    {% endfor %}
+
+</section>
+
+{% endblock %}

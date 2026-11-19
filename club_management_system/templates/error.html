@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+
+<section class="card error-card">
+
+    <p class="error-code">{{ code }}</p>
+
+    <h1>{{ title }}</h1>
+
+    <p class="muted">{{ message }}</p>
+
+    <a href="{{ url_for('home') }}" class="btn">
+        {% if session.get('account_id') %}Go to my dashboard{% else %}Go to login{% endif %}
+    </a>
+
+</section>
+
+{% endblock %}

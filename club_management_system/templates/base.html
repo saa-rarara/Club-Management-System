@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{#
+    base.html: shared layout for every page.
+
+    Other templates start with an "extends base.html" tag and fill in
+    the "title" and "content" blocks. The navigation bar is chosen
+    from session.role, so each role only sees its own links.
+    (The links are only a convenience: the real protection is the
+    role_required decorator on every route in app.py.)
+
+    Note: this is a Jinja comment, not an HTML comment. Jinja tags
+    written inside an HTML comment are still executed.
+#}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}SAU Club Management{% endblock %} | SAU Clubs</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="{% block body_class %}app-page{% endblock %}">
+
+    {% if session.get('account_id') %}
+
+        {% set role = session.get('role') %}
+
+        <header class="topbar">
+
+            <a href="{{ url_for('home') }}" class="brand">
+                SAU <span>Clubs</span>
+            </a>
+
+            <nav class="main-nav" aria-label="Main navigation">
+
+                {% if role == 'student' %}
+
+                    <a href="{{ url_for('student_dashboard') }}"
+                       class="{% if request.endpoint == 'student_dashboard' %}active{% endif %}">Dashboard</a>
+                    <a href="{{ url_for('view_clubs') }}"
+                       class="{% if request.endpoint == 'view_clubs' %}active{% endif %}">Clubs</a>
+                    <a href="{{ url_for('view_memberships') }}"
+                       class="{% if request.endpoint == 'view_memberships' %}active{% endif %}">My Memberships</a>
+                    <a href="{{ url_for('submit_application') }}"
+                       class="{% if request.endpoint == 'submit_application' %}active{% endif %}">New Application</a>
+                    <a href="{{ url_for('view_applications') }}"
+                       class="{% if request.endpoint == 'view_applications' %}active{% endif %}">My Applications</a>
+
+                {% elif role == 'faculty' %}
+
+                    <a href="{{ url_for('faculty_dashboard') }}"
+                       class="{% if request.endpoint == 'faculty_dashboard' %}active{% endif %}">Dashboard</a>
+                    <a href="{{ url_for('faculty_applications') }}"
+                       class="{% if request.endpoint == 'faculty_applications' %}active{% endif %}">Review Applications</a>
+
+                {% elif role == 'admin' %}
+
+                    <a href="{{ url_for('admin_dashboard') }}"
+                       class="{% if request.endpoint == 'admin_dashboard' %}active{% endif %}">Dashboard</a>
+                    <a href="{{ url_for('manage_students') }}"
+                       class="{% if request.endpoint == 'manage_students' %}active{% endif %}">Students</a>
+                    <a href="{{ url_for('manage_faculty') }}"
+                       class="{% if request.endpoint == 'manage_faculty' %}active{% endif %}">Faculty</a>
+                    <a href="{{ url_for('manage_clubs') }}"
+                       class="{% if request.endpoint == 'manage_clubs' %}active{% endif %}">Clubs</a>
+                    <a href="{{ url_for('manage_assignments') }}"
+                       class="{% if request.endpoint == 'manage_assignments' %}active{% endif %}">Assignments</a>
+                    <a href="{{ url_for('admin_applications') }}"
+                       class="{% if request.endpoint == 'admin_applications' %}active{% endif %}">Applications</a>
+
+                {% endif %}
+
+            </nav>
+
+            <div class="user-box">
+
+                <span class="user-name">
+                    {{ session.get('display_name') or session.get('username') or 'Signed in' }}
+                    <small>{{ role|capitalize }}</small>
+                </span>
+
+                <form action="{{ url_for('logout') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline btn-small">Sign Out</button>
+                </form>
+
+            </div>
+
+        </header>
+
+    {% endif %}
+
+
+    <main class="{% block main_class %}page{% endblock %}">
+
+        <!-- Flash messages: category is "success", "error" or "message". -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}" role="status">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+</body>
+</html>

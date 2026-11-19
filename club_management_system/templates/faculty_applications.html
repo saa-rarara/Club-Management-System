@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Review Applications{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>Review Applications</h1>
+        <p class="page-subtitle">
+            Applications submitted to the clubs you advise.
+        </p>
+    </div>
+</header>
+
+{% set filter_endpoint = 'faculty_applications' %}
+{% include "_status_filter.html" %}
+
+<section class="application-list">
+
+    {% for application in applications %}
+
+        {# Find this faculty member's own decision, if any. #}
+        {% set ns = namespace(mine=none) %}
+        {% for d in decisions.get(application.application_id, []) %}
+            {% if d.faculty_id == session.get('user_id') %}{% set ns.mine = d %}{% endif %}
+        {% endfor %}
+
+        <article class="card application-card" id="application-{{ application.application_id }}">
+
+            <div class="card-header">
+                <div>
+                    <h2>{{ application.title }}</h2>
+                    <p class="muted">
+                        {{ application.club_name }} &middot; by {{ application.student_name }}
+                        &middot; Submitted {{ application.submission_date|datetime_display }}
+                    </p>
+                </div>
+                <span class="status-badge {{ application.application_status|lower }}">
+                    {{ application.application_status }}
+                </span>
+            </div>
+
+            <div class="application-body">
+
+                <div>
+                    {% include "_application_details.html" %}
+                </div>
+
+                <div>
+                    <h4 class="decisions-heading">My Decision</h4>
+                    {% set action_url = url_for('faculty_decision', application_id=application.application_id) %}
+                    {% set my_decision = ns.mine %}
+                    {% include "_decision_form.html" %}
+                </div>
+
+            </div>
+
+        </article>
+
+    {% else %}
+
+        <section class="card">
+            <p class="empty-message">No applications found for this filter.</p>
+        </section>
+
+    {% endfor %}
+
+</section>
+
+{% endblock %}

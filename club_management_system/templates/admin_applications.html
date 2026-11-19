@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Applications{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>All Applications</h1>
+        <p class="page-subtitle">
+            Any rejection makes an application <strong>Rejected</strong>.
+            Two approvals (faculty advisor + administrator) make it <strong>Approved</strong>.
+        </p>
+    </div>
+</header>
+
+{% set filter_endpoint = 'admin_applications' %}
+{% include "_status_filter.html" %}
+
+<section class="application-list">
+
+    {% for application in applications %}
+
+        {# Find this administrator's own decision, if any. #}
+        {% set ns = namespace(mine=none) %}
+        {% for d in decisions.get(application.application_id, []) %}
+            {% if d.admin_id == session.get('user_id') %}{% set ns.mine = d %}{% endif %}
+        {% endfor %}
+
+        <article class="card application-card" id="application-{{ application.application_id }}">
+
+            <div class="card-header">
+                <div>
+                    <h2>{{ application.title }}</h2>
+                    <p class="muted">
+                        #{{ application.application_id }} &middot; {{ application.club_name }}
+                        &middot; by {{ application.student_name }}
+                        &middot; Submitted {{ application.submission_date|datetime_display }}
+                    </p>
+                </div>
+                <span class="status-badge {{ application.application_status|lower }}">
+                    {{ application.application_status }}
+                </span>
+            </div>
+
+            <div class="application-body">
+
+                <div>
+                    {% include "_application_details.html" %}
+                </div>
+
+                <div>
+                    <h4 class="decisions-heading">My Decision</h4>
+                    {% set action_url = url_for('admin_decision', application_id=application.application_id) %}
+                    {% set my_decision = ns.mine %}
+                    {% include "_decision_form.html" %}
+                </div>
+
+            </div>
+
+        </article>
+
+    {% else %}
+
+        <section class="card">
+            <p class="empty-message">No applications found for this filter.</p>
+        </section>
+
+    {% endfor %}
+
+</section>
+
+{% endblock %}

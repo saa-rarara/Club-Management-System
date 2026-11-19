@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}My Memberships{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+    <div>
+        <h1>My Memberships</h1>
+        <p class="page-subtitle">All clubs you have joined.</p>
+    </div>
+    <a href="{{ url_for('view_clubs') }}" class="btn">Browse Clubs</a>
+</header>
+
+<section class="card">
+
+    <div class="table-wrapper">
+
+        <table class="data-table">
+
+            <thead>
+                <tr>
+                    <th>Club</th>
+                    <th>Joined On</th>
+                    <th>Membership Status</th>
+                    <th>Club Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for membership in memberships %}
+
+                    <tr>
+                        <td class="strong">{{ membership.club_name }}</td>
+                        <td>{{ membership.join_date|datetime_display(false) }}</td>
+                        <td>
+                            <span class="status-badge {{ membership.membership_status|lower }}">
+                                {{ membership.membership_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge {{ membership.club_status|lower }}">
+                                {{ membership.club_status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if membership.membership_status == 'Active' and membership.club_status == 'Active' %}
+                                <a class="text-link"
+                                   href="{{ url_for('submit_application', club_id=membership.club_id) }}">
+                                    Apply for an event
+                                </a>
+                            {% else %}
+                                <span class="muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="5" class="empty-message">
+                            You have no memberships yet.
+                            <a href="{{ url_for('view_clubs') }}" class="text-link">Join a club</a>
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{% endblock %}
