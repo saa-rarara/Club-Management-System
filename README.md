@@ -253,3 +253,11 @@ A manual checklist for testing against MySQL is in `PROJECT_DOCUMENTATION.md`, s
 ---
 
 *South Asian University, Software Engineering Project, November 2026*
+
+## Team Members
+1. Aditya Adhikari
+2. Achyut Krishna Sharma
+3. Arnav Mishra
+4. Saara Ahmed
+5. Suyash Singh Gusain
+6. Tarini Parashar 
