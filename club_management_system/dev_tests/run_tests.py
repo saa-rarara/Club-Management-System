@@ -1,4 +1,4 @@
-# Optional automated tests. Uses a SQLite stand-in for MySQL; never touches your real database.
+#Uses a SQLite stand-in for MySQL; never touches your real database.
 # Usage (from the project folder):  python dev_tests/run_tests.py .
 import os, re, sys, shutil, subprocess
 HARNESS = os.path.dirname(os.path.abspath(__file__))
